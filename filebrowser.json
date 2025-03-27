@@ -1,0 +1,12 @@
+{
+    "port": 9184,
+    "baseURL": "",
+    "address": "0.0.0.0",
+    "log": "stdout",
+    "database": "/etc/filebrowser/database.db",
+    "root": "/home/ahaopt/qbittorrent/Downloads",
+    "scope": "/", 
+    "allowCommands": true,
+    "allowEdit": true,
+    "allowNew": true
+}
