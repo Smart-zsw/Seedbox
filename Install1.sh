@@ -87,21 +87,21 @@ if [[ "$OS" =~ "Ubuntu" ]]; then #Ubuntu 20.04+ are supported
 	fi
 fi
 
-# Hardcoded parameters
+# Set predefined parameters
 username="ahaopt"
-password='$nNG9e^rJaGinD*8'
-cache=2048
-qb_cache=$cache
+password="PV&pA8FWHd*cziPi"
+cache="2048"
+qb_install=1
 qb_ver=("qBittorrent-5.0.3")
 lib_ver=("libtorrent-v2.0.11")
 autoremove_install=1
 autobrr_install=1
 bbrx_install=1
 bbrv3_install=1
-qb_install=1
 qb_port=6767
 qb_incoming_port=26666
 autobrr_port=26667
+qb_cache=$cache
 
 # System Update & Dependencies Install
 info "Start System Update & Dependencies Install"
@@ -168,6 +168,8 @@ else
 fi
 install_ set_initial_congestion_window_ "Setting Initial Congestion Window" "/tmp/initial_congestion_window_error" initial_congestion_window_success
 install_ kernel_settings_ "Setting Kernel Settings" "/tmp/kernel_settings_error" kernel_settings_success
+
+
 
 # BBRx
 if [[ ! -z "$bbrx_install" ]]; then
