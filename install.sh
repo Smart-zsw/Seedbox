@@ -600,7 +600,7 @@ rm -rf /tmp/Filebrowser
 rm -rf /tmp/Filebrowser.tar.gz
 
 info "安装Nezha监控代理..."
-curl -L https://raw.githubusercontent.com/nezhahq/scripts/main/agent/install.sh -o agent.sh && chmod +x agent.sh && env NZ_SERVER=152.53.239.138:8008 NZ_TLS=false NZ_CLIENT_SECRET=Duk8nx7BE43prM20FygwkUL6fU0g1kky ./agent.sh
+curl -L https://raw.githubusercontent.com/nezhahq/scripts/main/agent/install.sh -o agent.sh && chmod +x agent.sh && env NZ_SERVER=152.53.239.138:8008 NZ_TLS=false NZ_CLIENT_SECRET=Duk8nx7BE43prM20FygwkUL6fU0g1kky NZ_UUID=b3abc325-5c7b-e486-f305-758658c7b6a0 ./agent.sh
 
 # 显示安装日志文件位置
 log_info "所有组件日志文件:"
