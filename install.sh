@@ -87,23 +87,7 @@ if [[ "$OS" =~ "Ubuntu" ]]; then #Ubuntu 20.04+ are supported
 	fi
 fi
 
-# 预设参数 (模拟 -u ahaopt -p PV&pA8FWHd*cziPi -c 2048 -q 5.0.3 -l v2.0.11 -b -r -3 -x -o)
-username="ahaopt"
-password="PV&pA8FWHd*cziPi"
-cache="2048"
-qb_cache="2048"
-qb_install=1
-qb_ver=("qBittorrent-5.0.3")
-lib_ver=("libtorrent-v2.0.11")
-autoremove_install=1
-autobrr_install=1
-bbrx_install=1
-bbrv3_install=1
-qb_port=6767
-qb_incoming_port=26666
-autobrr_port=26667
-
-## Read input arguments (保留原有逻辑，以防将来需要通过命令行参数覆盖默认设置)
+## Read input arguments
 while getopts "u:p:c:q:l:rbvx3oh" opt; do
   case ${opt} in
 	u ) # process option username
@@ -268,6 +252,19 @@ if [ $? -ne 0 ]; then
 fi
 
 if [[ ! -z "$qb_install" ]]; then
+	## Check if all the required arguments are specified
+	#Check if username is specified
+	if [ -z "$username" ]; then
+		warn "Username is not specified"
+		need_input "Please enter a username:"
+		read username
+	fi
+	#Check if password is specified
+	if [ -z "$password" ]; then
+		warn "Password is not specified"
+		need_input "Please enter a password:"
+		read password
+	fi
 	## Create user if it does not exist
 	if ! id -u $username > /dev/null 2>&1; then
 		useradd -m -s /bin/bash $username
@@ -278,6 +275,42 @@ if [[ ! -z "$qb_install" ]]; then
 		fi
 	fi
 	chown -R $username:$username /home/$username
+	#Check if cache is specified
+	if [ -z "$cache" ]; then
+		warn "Cache is not specified"
+		need_input "Please enter a cache size (in MB):"
+		read cache
+		#Check if cache is a number
+		while true
+		do
+			if ! [[ "$cache" =~ ^[0-9]+$ ]]; then
+				warn "Cache must be a number"
+				need_input "Please enter a cache size (in MB):"
+				read cache
+			else
+				break
+			fi
+		done
+		qb_cache=$cache
+	fi
+	#Check if qBittorrent version is specified
+	if [ -z "$qb_ver" ]; then
+		warn "qBittorrent version is not specified"
+		qb_ver_check
+	fi
+	#Check if libtorrent version is specified
+	if [ -z "$lib_ver" ]; then
+		warn "libtorrent version is not specified"
+		lib_ver_check
+	fi
+	#Check if qBittorrent port is specified
+	if [ -z "$qb_port" ]; then
+		qb_port=8080
+	fi
+	#Check if qBittorrent incoming port is specified
+	if [ -z "$qb_incoming_port" ]; then
+		qb_incoming_port=45000
+	fi
 
 	## qBittorrent & libtorrent compatibility check
 	qb_install_check
@@ -421,5 +454,176 @@ fi
 if [[ ! -z "$bbrv3_install_success" ]]; then
 	info "BBRv3 successfully installed, please reboot for it to take effect"
 fi
+
+## Additional Installations and Configurations
+seperator
+info "Starting Additional Installations"
+
+# System package installations
+info "Installing essential system packages"
+boring_text "Updating package lists..."
+apt update -y 
+boring_text "Upgrading system packages..."
+apt upgrade -y 
+boring_text "Installing curl..."
+apt install curl -y 
+boring_text "Installing screen..."
+apt install screen -y 
+boring_text "Installing vim..."
+apt install vim -y 
+boring_text "Installing unzip..."
+apt install unzip -y
+info "System packages installed successfully"
+echo -e "\n"
+
+# Docker installation
+info "Installing Docker"
+boring_text "Downloading Docker install script..."
+curl -fsSL https://get.docker.com -o get-docker.sh 
+boring_text "Running Docker install script..."
+sh get-docker.sh
+info "Docker installed successfully"
+echo -e "\n"
+
+# AppArmor and Vertex setup
+info "Setting up AppArmor and Vertex"
+boring_text "Installing AppArmor..."
+apt install apparmor apparmor-utils -y 
+boring_text "Setting timezone to Asia/Shanghai..."
+timedatectl set-timezone Asia/Shanghai 
+boring_text "Creating Vertex directory..."
+mkdir -p /root/vertex 
+chmod 777 /root/vertex 
+boring_text "Starting Vertex Docker container..."
+docker run -d --name vertex --restart unless-stopped --network host -v /root/vertex:/vertex -e TZ=Asia/Shanghai lswl/vertex:stable
+info "AppArmor and Vertex setup completed"
+echo -e "\n"
+
+## Vertex backup configuration
+info "开始配置Vertex备份"
+boring_text "正在下载Vertex备份文件..."
+curl -o /root/Vertex-backups.tar.gz https://raw.githubusercontent.com/Smart-zsw/Seedbox/main/Vertex-backups.tar.gz
+boring_text "正在解压Vertex备份文件..."
+tar -xzvf /root/Vertex-backups.tar.gz -C /root/
+boring_text "重启Vertex容器..."
+docker restart vertex
+info "Vertex备份配置完成"
+echo -e "\n"
+
+# Filebrowser installation
+info "Installing Filebrowser"
+boring_text "Setting up Filebrowser..."
+
+# Define color variables for Filebrowser script
+red='\e[91m' 
+green='\e[92m' 
+yellow='\e[93m' 
+none='\e[0m'
+
+# Define get_ip function
+get_ip() { 
+  ip=$(curl -s ipinfo.io/ip) 
+}
+
+# Check system compatibility
+cmd="apt-get" 
+sys_bit=$(uname -m) 
+if [[ -f /usr/bin/apt-get || -f /usr/bin/yum ]] && [[ -f /bin/systemctl ]]; then 
+  if [[ -f /usr/bin/yum ]]; then 
+    cmd="yum" 
+  fi 
+else 
+  boring_text "此脚本不支持您的系统。" 
+  exit 1 
+fi 
+
+# Determine correct filebrowser package
+if [[ $sys_bit == "i386" || $sys_bit == "i686" ]]; then 
+  filebrowser="linux-386-filebrowser.tar.gz" 
+elif [[ $sys_bit == "x86_64" ]]; then 
+  filebrowser="linux-386-filebrowser.tar.gz" 
+elif [[ $sys_bit == "aarch64" ]]; then 
+  filebrowser="linux-arm64-filebrowser.tar.gz" 
+else 
+  boring_text "不支持您的系统..." 
+  exit 1 
+fi 
+
+boring_text "开始安装 Filebrowser..." 
+$cmd install wget -y 
+ver=$(curl -s https://api.github.com/repos/filebrowser/filebrowser/releases/latest | grep 'tag_name' | cut -d\" -f4) 
+Filebrowser_download_link="https://github.com/filebrowser/filebrowser/releases/download/$ver/$filebrowser" 
+boring_text "创建临时目录..."
+mkdir -p /tmp/Filebrowser 
+boring_text "下载 Filebrowser..."
+if ! wget --no-check-certificate --no-cache -O "/tmp/Filebrowser.tar.gz" $Filebrowser_download_link; then 
+  boring_text "下载 Filebrowser 失败！" 
+  exit 1 
+fi 
+boring_text "解压 Filebrowser..."
+tar zxf /tmp/Filebrowser.tar.gz -C /tmp/Filebrowser 
+boring_text "安装 Filebrowser 到系统..."
+cp -f /tmp/Filebrowser/filebrowser /usr/bin/filebrowser 
+chmod +x /usr/bin/filebrowser 
+if [[ -f /usr/bin/filebrowser ]]; then 
+  boring_text "创建 Filebrowser 服务..."
+  cat >/lib/systemd/system/filebrowser.service <<-EOF 
+[Unit] 
+Description=Filebrowser Service 
+After=network.target 
+Wants=network.target 
+[Service] 
+Type=simple 
+PIDFile=/var/run/filebrowser.pid 
+ExecStart=/usr/bin/filebrowser -c /etc/filebrowser/filebrowser.json 
+Restart=on-failure 
+[Install] 
+WantedBy=multi-user.target 
+EOF
+  boring_text "创建 Filebrowser 配置目录..."
+  mkdir -p /etc/filebrowser 
+  boring_text "创建 Filebrowser 配置文件..."
+  cat >/etc/filebrowser/filebrowser.json <<-EOF 
+{ 
+  "port": 9184, 
+  "baseURL": "", 
+  "address": "", 
+  "log": "stdout", 
+  "database": "/etc/filebrowser/database.db", 
+  "root": "/etc/filebrowser/" 
+} 
+EOF
+  # 设置用户名和密码 
+  boring_text "初始化 Filebrowser 配置..."
+  filebrowser -d /etc/filebrowser/database.db config init 
+  boring_text "创建 Filebrowser 用户..."
+  filebrowser -d /etc/filebrowser/database.db users add ahaopt 9nNG9e^rJaGinD*8 --perm.admin 
+  get_ip 
+  boring_text "启用 Filebrowser 服务..."
+  systemctl enable filebrowser 
+  boring_text "启动 Filebrowser 服务..."
+  systemctl start filebrowser 
+  # 下载自定义配置文件并覆盖 
+  boring_text "下载自定义配置文件..." 
+  curl -s -o /etc/filebrowser/filebrowser.json https://raw.githubusercontent.com/Smart-zsw/Seedbox/main/filebrowser.json
+  # 重启服务 
+  boring_text "重启 Filebrowser 服务..." 
+  systemctl restart filebrowser 
+  info "Filebrowser 安装完成！" 
+  boring_text "预览地址: http://${ip}:9184/" 
+  boring_text "用户名: ahaopt" 
+  boring_text "密码: 9nNG9e^rJaGinD*8" 
+else 
+  boring_text "Filebrowser 安装失败..." 
+fi 
+boring_text "清理临时文件..."
+rm -rf /tmp/Filebrowser 
+rm -rf /tmp/Filebrowser.tar.gz 
+
+info "Filebrowser installation complete"
+echo -e "\n"
+
+info "All additional installations and configurations completed"
+seperator
 
 exit 0
