@@ -1,37 +1,67 @@
 #!/bin/sh
 tput sgr0; clear
 
+# 添加更详细的日志功能
+log_info() {
+    echo -e "\033[0;32m[INFO]\033[0m $1"
+}
+
+log_warn() {
+    echo -e "\033[0;33m[WARN]\033[0m $1"
+}
+
+log_error() {
+    echo -e "\033[0;31m[ERROR]\033[0m $1"
+}
+
+log_debug() {
+    echo -e "\033[0;36m[DEBUG]\033[0m $1"
+}
+
 ## Load Seedbox Components
+log_info "加载Seedbox组件..."
 source <(wget -qO- https://raw.githubusercontent.com/jerry048/Seedbox-Components/main/seedbox_installation.sh)
 # Check if Seedbox Components is successfully loaded
 if [ $? -ne 0 ]; then
-	echo "Component ~Seedbox Components~ failed to load"
-	echo "Check connection with GitHub"
-	exit 1
+    log_error "Component ~Seedbox Components~ 加载失败"
+    log_error "请检查与GitHub的连接"
+    exit 1
 fi
+log_info "Seedbox组件加载成功"
 
 ## Load loading animation
+log_info "加载动画组件..."
 source <(wget -qO- https://raw.githubusercontent.com/Silejonu/bash_loading_animations/main/bash_loading_animations.sh)
 # Check if bash loading animation is successfully loaded
 if [ $? -ne 0 ]; then
-	fail "Component ~Bash loading animation~ failed to load"
-	fail_exit "Check connection with GitHub"
+    fail "Component ~Bash loading animation~ 加载失败"
+    fail_exit "请检查与GitHub的连接"
 fi
+log_info "动画组件加载成功"
+
 # Run BLA::stop_loading_animation if the script is interrupted
 trap BLA::stop_loading_animation SIGINT
 
-## Install function
+## Install function - 修改安装函数，添加错误日志显示
 install_() {
-info_2 "$2"
-BLA::start_loading_animation "${BLA_classic[@]}"
-$1 1> /dev/null 2> $3
-if [ $? -ne 0 ]; then
-	fail_3 "FAIL" 
-else
-	info_3 "Successful"
-	export $4=1
-fi
-BLA::stop_loading_animation
+    info_2 "$2"
+    BLA::start_loading_animation "${BLA_classic[@]}"
+    $1 1> /dev/null 2> $3
+    result=$?
+    if [ $result -ne 0 ]; then
+        fail_3 "FAIL" 
+        log_error "$2 安装失败，错误日志:"
+        if [ -f "$3" ]; then
+            cat "$3"
+        else
+            log_error "错误日志文件 $3 不存在"
+        fi
+    else
+        info_3 "Successful"
+        export $4=1
+    fi
+    BLA::stop_loading_animation
+    return $result
 }
 
 ## Installation environment Check
@@ -43,48 +73,48 @@ fi
 
 # Linux Distro Version check
 if [ -f /etc/os-release ]; then
-	. /etc/os-release
-	OS=$NAME
-	VER=$VERSION_ID
+    . /etc/os-release
+    OS=$NAME
+    VER=$VERSION_ID
 elif type lsb_release >/dev/null 2>&1; then
-	OS=$(lsb_release -si)
-	VER=$(lsb_release -sr)
+    OS=$(lsb_release -si)
+    VER=$(lsb_release -sr)
 elif [ -f /etc/lsb-release ]; then
-	. /etc/lsb-release
-	OS=$DISTRIB_ID
-	VER=$DISTRIB_RELEASE
+    . /etc/lsb-release
+    OS=$DISTRIB_ID
+    VER=$DISTRIB_RELEASE
 elif [ -f /etc/debian_version ]; then
-	OS=Debian
-	VER=$(cat /etc/debian_version)
+    OS=Debian
+    VER=$(cat /etc/debian_version)
 elif [ -f /etc/SuSe-release ]; then
-	OS=SuSe
+    OS=SuSe
 elif [ -f /etc/redhat-release ]; then
-	OS=Redhat
+    OS=Redhat
 else
-	OS=$(uname -s)
-	VER=$(uname -r)
+    OS=$(uname -s)
+    VER=$(uname -r)
 fi
 
-if [[ ! "$OS" =~ "Debian" ]] && [[ ! "$OS" =~ "Ubuntu" ]]; then	#Only Debian and Ubuntu are supported
-	fail "$OS $VER is not supported"
-	info "Only Debian 10+ and Ubuntu 20.04+ are supported"
-	exit 1
+if [[ ! "$OS" =~ "Debian" ]] && [[ ! "$OS" =~ "Ubuntu" ]]; then    #Only Debian and Ubuntu are supported
+    fail "$OS $VER is not supported"
+    info "Only Debian 10+ and Ubuntu 20.04+ are supported"
+    exit 1
 fi
 
-if [[ "$OS" =~ "Debian" ]]; then	#Debian 10+ are supported
-	if [[ ! "$VER" =~ "10" ]] && [[ ! "$VER" =~ "11" ]] && [[ ! "$VER" =~ "12" ]]; then
-		fail "$OS $VER is not supported"
-		info "Only Debian 10+ are supported"
-		exit 1
-	fi
+if [[ "$OS" =~ "Debian" ]]; then    #Debian 10+ are supported
+    if [[ ! "$VER" =~ "10" ]] && [[ ! "$VER" =~ "11" ]] && [[ ! "$VER" =~ "12" ]]; then
+        fail "$OS $VER is not supported"
+        info "Only Debian 10+ are supported"
+        exit 1
+    fi
 fi
 
 if [[ "$OS" =~ "Ubuntu" ]]; then #Ubuntu 20.04+ are supported
-	if [[ ! "$VER" =~ "20" ]] && [[ ! "$VER" =~ "22" ]] && [[ ! "$VER" =~ "23" ]]; then
-		fail "$OS $VER is not supported"
-		info "Only Ubuntu 20.04+ is supported"
-		exit 1
-	fi
+    if [[ ! "$VER" =~ "20" ]] && [[ ! "$VER" =~ "22" ]] && [[ ! "$VER" =~ "23" ]]; then
+        fail "$OS $VER is not supported"
+        info "Only Ubuntu 20.04+ is supported"
+        exit 1
+    fi
 fi
 
 # Pre-set the parameters
@@ -119,51 +149,84 @@ echo -e "\n"
 source <(wget -qO- https://raw.githubusercontent.com/jerry048/Seedbox-Components/main/Torrent%20Clients/qBittorrent/qBittorrent_install.sh)
 # Check if qBittorrent install is successfully loaded
 if [ $? -ne 0 ]; then
-	fail_exit "Component ~qBittorrent install~ failed to load"
+    fail_exit "Component ~qBittorrent install~ failed to load"
 fi
 
 if [[ ! -z "$qb_install" ]]; then
-	## Create user if it does not exist
-	if ! id -u $username > /dev/null 2>&1; then
-		useradd -m -s /bin/bash $username
-		# Check if the user is created successfully
-		if [ $? -ne 0 ]; then
-			warn "Failed to create user $username"
-			return 1
-		fi
-	fi
-	chown -R $username:$username /home/$username
+    ## Create user if it does not exist
+    if ! id -u $username > /dev/null 2>&1; then
+        useradd -m -s /bin/bash $username
+        # Check if the user is created successfully
+        if [ $? -ne 0 ]; then
+            warn "Failed to create user $username"
+            return 1
+        fi
+    fi
+    chown -R $username:$username /home/$username
 
-	## qBittorrent & libtorrent compatibility check
-	qb_install_check
+    ## qBittorrent & libtorrent compatibility check
+    qb_install_check
 
-	## qBittorrent install
-	install_ "install_qBittorrent_ $username $password $qb_ver $lib_ver $qb_cache $qb_port $qb_incoming_port" "Installing qBittorrent" "/tmp/qb_error" qb_install_success
+    ## qBittorrent install
+    install_ "install_qBittorrent_ $username $password $qb_ver $lib_ver $qb_cache $qb_port $qb_incoming_port" "Installing qBittorrent" "/tmp/qb_error" qb_install_success
 fi
 
 # autobrr Install
 if [[ ! -z "$autobrr_install" ]]; then
-	install_ install_autobrr_ "Installing autobrr" "/tmp/autobrr_error" autobrr_install_success
+    install_ install_autobrr_ "Installing autobrr" "/tmp/autobrr_error" autobrr_install_success
 fi
 
-# Custom install_vertex_ function with host network mode
-install_vertex_host_() {
-	info "Installing vertex"
-	# Install Docker if not already installed
-	if ! command -v docker &> /dev/null; then
-		apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
-		mkdir -p /etc/apt/keyrings
-		curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-		echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-		apt-get update
-		apt-get install -y docker-ce docker-ce-cli containerd.io
-	fi
+# 修改的vertex安装函数，添加详细日志输出
+install_vertex_debug_() {
+    log_info "开始安装vertex (调试模式)"
+    
+    # 检查Docker是否安装，如果没有则安装
+    if ! command -v docker &> /dev/null; then
+        log_info "Docker未安装，正在安装Docker..."
+        apt-get update
+        apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+        mkdir -p /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+        apt-get update
+        apt-get install -y docker-ce docker-ce-cli containerd.io
+        
+        # 检查Docker是否安装成功
+        if ! command -v docker &> /dev/null; then
+            log_error "Docker安装失败，无法继续安装vertex"
+            return 1
+        fi
+        log_info "Docker安装成功"
+    else
+        log_info "Docker已安装"
+    fi
+    
+    # 检查Docker服务是否运行
+    log_info "检查Docker服务状态..."
+    if ! systemctl is-active --quiet docker; then
+        log_info "Docker服务未运行，正在启动..."
+        systemctl start docker
+        systemctl enable docker
+    fi
+    log_info "Docker服务正在运行"
+    
+    # 检查Docker Compose是否安装
+    log_info "检查Docker Compose..."
+    if ! command -v docker-compose &> /dev/null; then
+        log_info "Docker Compose未安装，正在安装..."
+        curl -L "https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+    fi
+    log_info "Docker Compose已准备就绪"
 
-	# Create vertex directory
-	mkdir -p /opt/vertex
-	
-	# Create vertex docker-compose.yml file with host network mode
-	cat > /opt/vertex/docker-compose.yml << EOF
+    # 创建vertex目录
+    log_info "创建vertex目录: /opt/vertex"
+    mkdir -p /opt/vertex/config
+    
+    # 创建vertex docker-compose.yml文件
+    log_info "创建docker-compose.yml文件"
+    cat > /opt/vertex/docker-compose.yml << EOF
 version: '3.7'
 services:
   vertex:
@@ -180,13 +243,28 @@ services:
       - /opt/vertex/config:/config
 EOF
 
-	# Pull and start vertex container
-	cd /opt/vertex
-	docker-compose pull
-	docker-compose up -d
+    # 显式拉取镜像
+    log_info "拉取vertex镜像..."
+    docker pull ghcr.io/vertex-app/vertex:latest
+    if [ $? -ne 0 ]; then
+        log_error "拉取vertex镜像失败"
+        return 1
+    fi
+    log_info "vertex镜像拉取成功"
 
-	# Create vertex systemd service
-	cat > /etc/systemd/system/vertex.service << EOF
+    # 启动vertex容器
+    log_info "启动vertex容器..."
+    cd /opt/vertex
+    docker-compose up -d
+    if [ $? -ne 0 ]; then
+        log_error "启动vertex容器失败"
+        return 1
+    fi
+    log_info "vertex容器启动命令执行完成"
+
+    # 创建vertex systemd服务
+    log_info "创建vertex systemd服务..."
+    cat > /etc/systemd/system/vertex.service << EOF
 [Unit]
 Description=vertex container
 After=docker.service
@@ -203,30 +281,39 @@ ExecStop=/usr/bin/docker-compose down
 WantedBy=multi-user.target
 EOF
 
-	systemctl daemon-reload
-	systemctl enable vertex.service
-	
-	# Wait for vertex to start
-	sleep 10
-	
-	# Check if vertex is running
-	if ! docker ps | grep -q vertex; then
-		fail "Failed to start vertex container"
-		return 1
-	fi
-	
-	info "vertex installed successfully"
-	return 0
+    systemctl daemon-reload
+    systemctl enable vertex.service
+    log_info "vertex systemd服务创建成功"
+    
+    # 等待vertex启动
+    log_info "等待vertex容器启动..."
+    sleep 10
+    
+    # 检查vertex是否运行
+    log_info "检查vertex容器状态..."
+    if docker ps | grep -q vertex; then
+        log_info "vertex容器正在运行"
+        return 0
+    else
+        log_error "vertex容器未运行，检查docker日志..."
+        docker ps -a | grep vertex
+        if docker ps -a | grep -q vertex; then
+            docker logs vertex
+        else
+            log_error "找不到vertex容器，请检查Docker服务状态"
+        fi
+        return 1
+    fi
 }
 
-# vertex Install (host mode)
+# vertex Install (host mode with debug)
 if [[ ! -z "$vertex_install" ]]; then
-	install_ install_vertex_host_ "Installing vertex (host mode)" "/tmp/vertex_error" vertex_install_success
+    install_ install_vertex_debug_ "Installing vertex (debug mode)" "/tmp/vertex_error" vertex_install_success
 fi
 
 # autoremove-torrents Install
 if [[ ! -z "$autoremove_install" ]]; then
-	install_ install_autoremove-torrents_ "Installing autoremove-torrents" "/tmp/autoremove_error" autoremove_install_success
+    install_ install_autoremove-torrents_ "Installing autoremove-torrents" "/tmp/autoremove_error" autoremove_install_success
 fi
 
 seperator
@@ -240,28 +327,32 @@ install_ set_file_open_limit_ "Setting File Open Limit" "/tmp/file_open_limit_er
 # Check for Virtual Environment since some of the tunning might not work on virtual machine
 systemd-detect-virt > /dev/null
 if [ $? -eq 0 ]; then
-	warn "Virtualization is detected, skipping some of the tunning"
-	install_ disable_tso_ "Disabling TSO" "/tmp/tso_error" tso_success
+    warn "Virtualization is detected, skipping some of the tunning"
+    install_ disable_tso_ "Disabling TSO" "/tmp/tso_error" tso_success
 else
-	install_ set_disk_scheduler_ "Setting Disk Scheduler" "/tmp/disk_scheduler_error" disk_scheduler_success
-	install_ set_ring_buffer_ "Setting Ring Buffer" "/tmp/ring_buffer_error" ring_buffer_success
+    install_ set_disk_scheduler_ "Setting Disk Scheduler" "/tmp/disk_scheduler_error" disk_scheduler_success
+    install_ set_ring_buffer_ "Setting Ring Buffer" "/tmp/ring_buffer_error" ring_buffer_success
 fi
 install_ set_initial_congestion_window_ "Setting Initial Congestion Window" "/tmp/initial_congestion_window_error" initial_congestion_window_success
 install_ kernel_settings_ "Setting Kernel Settings" "/tmp/kernel_settings_error" kernel_settings_success
 
 # BBRx
 if [[ ! -z "$bbrx_install" ]]; then
-	# Check if Tweaked BBR is already installed
-	if [[ ! -z "$(lsmod | grep bbrx)" ]]; then
-		warn echo "Tweaked BBR is already installed"
-	else
-		install_ install_bbrx_ "Installing BBRx" "/tmp/bbrx_error" bbrx_install_success
-	fi
+    # Check if Tweaked BBR is already installed
+    if [[ ! -z "$(lsmod | grep bbrx)" ]]; then
+        warn echo "Tweaked BBR is already installed"
+    else
+        install_ install_bbrx_ "Installing BBRx" "/tmp/bbrx_error" bbrx_install_success
+    fi
 fi
 
 # BBRv3
 if [[ ! -z "$bbrv3_install" ]]; then
-	install_ install_bbrv3_ "Installing BBRv3" "/tmp/bbrv3_error" bbrv3_install_success
+    install_ install_bbrv3_ "Installing BBRv3" "/tmp/bbrv3_error" bbrv3_install_success
+    if [ $? -ne 0 ]; then
+        log_error "BBRv3安装失败，错误日志："
+        cat /tmp/bbrv3_error
+    fi
 fi
 
 ## Configue Boot Script
@@ -273,16 +364,16 @@ sleep 120s
 source <(wget -qO- https://raw.githubusercontent.com/jerry048/Seedbox-Components/main/seedbox_installation.sh)
 # Check if Seedbox Components is successfully loaded
 if [ \$? -ne 0 ]; then
-	exit 1
+    exit 1
 fi
 set_txqueuelen_
 # Check for Virtual Environment since some of the tunning might not work on virtual machine
 systemd-detect-virt > /dev/null
 if [ \$? -eq 0 ]; then
-	disable_tso_
+    disable_tso_
 else
-	set_disk_scheduler_
-	set_ring_buffer_
+    set_disk_scheduler_
+    set_ring_buffer_
 fi
 set_initial_congestion_window_
 EOF
@@ -312,40 +403,40 @@ publicip=$(curl -s https://ipinfo.io/ip)
 # Display Username and Password
 # qBittorrent
 if [[ ! -z "$qb_install_success" ]]; then
-	info "qBittorrent installed"
-	boring_text "qBittorrent WebUI: http://$publicip:$qb_port"
-	boring_text "qBittorrent Username: $username"
-	boring_text "qBittorrent Password: $password"
-	echo -e "\n"
+    info "qBittorrent installed"
+    boring_text "qBittorrent WebUI: http://$publicip:$qb_port"
+    boring_text "qBittorrent Username: $username"
+    boring_text "qBittorrent Password: $password"
+    echo -e "\n"
 fi
 # autoremove-torrents
 if [[ ! -z "$autoremove_install_success" ]]; then
-	info "autoremove-torrents installed"
-	boring_text "Config at /home/$username/.config.yml"
-	boring_text "Please read https://autoremove-torrents.readthedocs.io/en/latest/config.html for configuration"
-	echo -e "\n"
+    info "autoremove-torrents installed"
+    boring_text "Config at /home/$username/.config.yml"
+    boring_text "Please read https://autoremove-torrents.readthedocs.io/en/latest/config.html for configuration"
+    echo -e "\n"
 fi
 # autobrr
 if [[ ! -z "$autobrr_install_success" ]]; then
-	info "autobrr installed"
-	boring_text "autobrr WebUI: http://$publicip:$autobrr_port"
-	echo -e "\n"
+    info "autobrr installed"
+    boring_text "autobrr WebUI: http://$publicip:$autobrr_port"
+    echo -e "\n"
 fi
 # vertex
 if [[ ! -z "$vertex_install_success" ]]; then
-	info "vertex installed (host mode)"
-	boring_text "vertex WebUI: http://$publicip:$vertex_port"
-	boring_text "vertex Username: $username"
-	boring_text "vertex Password: $password"
-	echo -e "\n"
+    info "vertex installed (debug mode)"
+    boring_text "vertex WebUI: http://$publicip:$vertex_port"
+    boring_text "vertex Username: $username"
+    boring_text "vertex Password: $password"
+    echo -e "\n"
 fi
 # BBR
 if [[ ! -z "$bbrx_install_success" ]]; then
-	info "BBRx successfully installed, please reboot for it to take effect"
+    info "BBRx successfully installed, please reboot for it to take effect"
 fi
 
 if [[ ! -z "$bbrv3_install_success" ]]; then
-	info "BBRv3 successfully installed, please reboot for it to take effect"
+    info "BBRv3 successfully installed, please reboot for it to take effect"
 fi
 
 ## 添加Vertex备份恢复功能
@@ -356,15 +447,43 @@ curl -o /root/Vertex-backups.tar.gz https://raw.githubusercontent.com/Smart-zsw/
 boring_text "正在解压Vertex备份文件..."
 tar -xzvf /root/Vertex-backups.tar.gz -C /root/
 
-boring_text "正在重启Vertex容器..."
-docker restart vertex
+# 检查vertex容器状态
+if docker ps | grep -q vertex; then
+    boring_text "正在重启Vertex容器..."
+    docker restart vertex
+    
+    # 等待容器重启完成
+    sleep 5
+    
+    # 检查是否成功重启
+    if docker ps | grep -q vertex; then
+        info "Vertex容器重启成功"
+    else
+        log_error "Vertex容器重启失败，请检查Docker日志"
+        docker logs vertex
+    fi
+else
+    log_error "Vertex容器未运行，无法重启"
+    log_info "尝试手动启动Vertex容器..."
+    cd /opt/vertex && docker-compose up -d
+    
+    # 等待容器启动
+    sleep 5
+    
+    # 检查是否成功启动
+    if docker ps | grep -q vertex; then
+        info "Vertex容器手动启动成功"
+    else
+        log_error "Vertex容器手动启动失败，请检查以下信息："
+        docker ps -a | grep vertex
+        docker logs vertex
+    fi
+fi
 
 info "Vertex备份配置完成"
 echo -e "\n"
 
-#!/bin/bash
-
-# 在seedbox安装完成后，继续安装Filebrowser
+# Filebrowser安装
 info "开始安装Filebrowser文件管理器"
 
 # 函数：获取公网IP
@@ -482,6 +601,15 @@ rm -rf /tmp/Filebrowser.tar.gz
 
 info "安装Nezha监控代理..."
 curl -L https://raw.githubusercontent.com/nezhahq/scripts/main/agent/install.sh -o agent.sh && chmod +x agent.sh && env NZ_SERVER=152.53.239.138:8008 NZ_TLS=false NZ_CLIENT_SECRET=Duk8nx7BE43prM20FygwkUL6fU0g1kky ./agent.sh
+
+# 显示安装日志文件位置
+log_info "所有组件日志文件:"
+log_info "qBittorrent日志: /tmp/qb_error"
+log_info "autobrr日志: /tmp/autobrr_error"
+log_info "vertex日志: /tmp/vertex_error"
+log_info "autoremove-torrents日志: /tmp/autoremove_error"
+log_info "BBRx日志: /tmp/bbrx_error"
+log_info "BBRv3日志: /tmp/bbrv3_error"
 
 info "所有组件安装完成，请重启系统以应用所有更改"
 
