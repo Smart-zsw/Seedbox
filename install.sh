@@ -44,7 +44,8 @@ apt upgrade -y &&
 apt install curl -y &&
 apt install screen -y &&
 apt install vim -y &&
-apt install unzip -y
+apt install unzip -y &&
+apt install vnstat -y
 
 if [ $? -eq 0 ]; then
     info_3 "基本工具包安装成功"
