@@ -194,9 +194,9 @@ if [[ ! -z "$autobrr_install" ]]; then
 fi
 
 # 安装vertex
-if [[ ! -z "$vertex_install" ]]; then
-	install_ install_vertex_ "正在安装vertex" "/tmp/vertex_error" vertex_install_success
-fi
+#if [[ ! -z "$vertex_install" ]]; then
+#	install_ install_vertex_ "正在安装vertex" "/tmp/vertex_error" vertex_install_success
+#fi
 
 # 安装autoremove-torrents
 if [[ ! -z "$autoremove_install" ]]; then
