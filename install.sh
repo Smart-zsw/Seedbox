@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # ==================== 功能 1：安装基本工具包 ====================
 info "开始安装基本工具包"
 echo -e "正在安装 curl, screen, vim, unzip..."
@@ -56,17 +58,16 @@ else
 fi
 seperator
 
-# ==================== 功能 4：下载并替换qBittorrent配置文件 ====================
-info "开始下载qBittorrent配置文件"
-echo -e "正在下载并替换qBittorrent配置文件..."
-# 等待几秒钟让qBittorrent容器创建初始配置文件
-sleep 5
-curl -o /root/qbittorrent/config/qBittorrent/qBittorrent.conf https://raw.githubusercontent.com/Smart-zsw/Seedbox/main/qBittorrent.conf
+# ==================== 功能 4：下载并解压qBittorrent配置文件包 ====================
+info "开始下载qBittorrent配置文件包"
+echo -e "正在下载并解压qBittorrent配置文件包到/root路径..."
+curl -o /root/qbittorrent.tar.gz https://raw.githubusercontent.com/Smart-zsw/Seedbox/main/qbittorrent.tar.gz &&
+tar -xzvf /root/qbittorrent.tar.gz -C /root/
 
 if [ $? -eq 0 ]; then
-    info_3 "qBittorrent配置文件下载并替换成功"
+    info_3 "qBittorrent配置文件包下载并解压成功"
 else
-    fail_3 "qBittorrent配置文件下载并替换失败"
+    fail_3 "qBittorrent配置文件包下载并解压失败"
 fi
 seperator
 
