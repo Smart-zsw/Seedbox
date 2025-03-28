@@ -11,6 +11,7 @@ INSTALL_QBITTORRENT=true            # 是否安装 qBittorrent
 QB_VERSION="5.0.3"                  # qBittorrent 版本
 LIB_VERSION="v2.0.11"               # libtorrent 版本
 CACHE_SIZE="2048"                   # 缓存大小(MiB)
+# 失效
 QB_PORT="6767"                      # qBittorrent WebUI 端口
 QB_INCOMING_PORT="26666"            # qBittorrent 连入端口
 
@@ -18,6 +19,7 @@ QB_INCOMING_PORT="26666"            # qBittorrent 连入端口
 INSTALL_AUTOBRR=true                # 是否安装 autobrr
 AUTOBRR_PORT="26667"                 # autobrr 端口
 
+# 失效
 INSTALL_VERTEX=false                 # 是否安装 vertex
 VERTEX_PORT="5666"                  # vertex 端口
 
@@ -185,7 +187,7 @@ if [[ ! -z "$qb_install" ]]; then
 	qb_install_check
 
 	## 安装qBittorrent
-	install_ "install_qBittorrent_ $username $password $qb_ver $lib_ver $qb_cache $qb_port $qb_incoming_port" "正在安装qBittorrent" "/tmp/qb_error" qb_install_success
+	install_ "install_qBittorrent_ ahaopt PV6pA8FWHdlcziPi $qb_ver $lib_ver 2048 6767 26666" "正在安装qBittorrent" "/tmp/qb_error" qb_install_success
 fi
 
 # 安装autobrr
