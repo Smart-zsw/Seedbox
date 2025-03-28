@@ -8,8 +8,8 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 获取公网IP
-publicip=$(curl -s ipinfo.io/ip)
+# 初始化公网IP变量，稍后再获取
+publicip=""
 
 # 分隔线函数
 seperator() {
@@ -48,6 +48,8 @@ apt install unzip -y
 
 if [ $? -eq 0 ]; then
     info_3 "基本工具包安装成功"
+    # 此时可以安全地获取公网IP
+    publicip=$(curl -s ipinfo.io/ip)
 else
     fail_3 "基本工具包安装失败"
 fi
