@@ -18,7 +18,7 @@ QB_INCOMING_PORT="26666"            # qBittorrent 连入端口
 INSTALL_AUTOBRR=true                # 是否安装 autobrr
 AUTOBRR_PORT="26667"                 # autobrr 端口
 
-INSTALL_VERTEX=true                 # 是否安装 vertex
+INSTALL_VERTEX=false                 # 是否安装 vertex
 VERTEX_PORT="5666"                  # vertex 端口
 
 INSTALL_AUTOREMOVE=true             # 是否安装 autoremove-torrents
