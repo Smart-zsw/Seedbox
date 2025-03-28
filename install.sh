@@ -1,4 +1,40 @@
-#!/bin/sh
+#!/bin/bash
+
+# ==================== 辅助函数定义 ====================
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# 获取公网IP
+publicip=$(curl -s ipinfo.io/ip)
+
+# 分隔线函数
+seperator() {
+    echo -e "\n${BLUE}===========================================================${NC}\n"
+}
+
+# 信息输出函数
+info() {
+    echo -e "${YELLOW}[INFO] $1${NC}"
+}
+
+# 成功信息输出
+info_3() {
+    echo -e "${GREEN}[SUCCESS] $1${NC}"
+}
+
+# 失败信息输出
+fail_3() {
+    echo -e "${RED}[FAILED] $1${NC}"
+}
+
+# 普通文本输出
+boring_text() {
+    echo -e "${BLUE}$1${NC}"
+}
 
 # ==================== 功能 1：安装基本工具包 ====================
 info "开始安装基本工具包"
@@ -60,6 +96,9 @@ seperator
 
 # ==================== 功能 4：下载并解压qBittorrent配置文件包 ====================
 info "开始下载qBittorrent配置文件包"
+echo -e "正在停止qBittorrent容器..."
+docker stop qbittorrent
+
 echo -e "正在下载并解压qBittorrent配置文件包到/root路径..."
 curl -o /root/qbittorrent.tar.gz https://raw.githubusercontent.com/Smart-zsw/Seedbox/main/qbittorrent.tar.gz &&
 tar -xzvf /root/qbittorrent.tar.gz -C /root/
@@ -70,6 +109,9 @@ else
     fail_3 "qBittorrent配置文件包下载并解压失败"
 fi
 seperator
+
+echo -e "正在启动qBittorrent容器..."
+docker start qbittorrent
 
 # ==================== 功能 5：运行Dedicated-Seedbox安装脚本 ====================
 info "开始运行Dedicated-Seedbox安装脚本"
@@ -128,7 +170,7 @@ seperator
 info "开始安装Filebrowser"
 echo -e "正在执行Filebrowser安装脚本..."
 
-# 颜色定义
+# Filebrowser颜色定义（保留原脚本中的颜色定义，以避免冲突）
 red='\e[91m'
 green='\e[92m'
 yellow='\e[93m'
