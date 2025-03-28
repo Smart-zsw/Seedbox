@@ -40,8 +40,8 @@ chmod 777 /home/ahaopt/qbittorrent/Downloads
 docker run -d \
   --name=qbittorrent \
   --network host \
-  -e PUID=1000 \
-  -e PGID=1000 \
+  -e PUID=0 \
+  -e PGID=0 \
   -e TZ=Asia/Shanghai \
   -e WEBUI_PORT=6767 \
   -e TORRENTING_PORT=26666 \
