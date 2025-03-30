@@ -87,7 +87,7 @@ docker run -d \
   -v /root/qbittorrent/config:/config \
   -v /home/ahaopt/qbittorrent/Downloads:/home/ahaopt/qbittorrent/Downloads \
   --restart unless-stopped \
-  lscr.io/linuxserver/qbittorrent:5.0.4
+  lscr.io/linuxserver/qbittorrent:5.0.3
 
 if [ $? -eq 0 ]; then
     info_3 "qBittorrent Docker容器安装成功"
