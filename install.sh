@@ -70,63 +70,63 @@ fi
 seperator
 
 # ==================== 功能 3：安装qBittorrent ====================
-# info "开始安装qBittorrent"
-# echo -e "正在创建目录并安装qBittorrent Docker容器..."
-# mkdir -p /root/qbittorrent/config
-# mkdir -p /home/ahaopt/qbittorrent/Downloads
-# chmod 777 /home/ahaopt/qbittorrent/Downloads
+info "开始安装qBittorrent"
+echo -e "正在创建目录并安装qBittorrent Docker容器..."
+mkdir -p /root/qbittorrent/config
+mkdir -p /home/ahaopt/qbittorrent/Downloads
+chmod 777 /home/ahaopt/qbittorrent/Downloads
 
-# docker run -d \
-#   --name=qbittorrent \
-#   --network host \
-#   -e PUID=0 \
-#   -e PGID=0 \
-#   -e TZ=Asia/Shanghai \
-#   -e WEBUI_PORT=6767 \
-#   -e TORRENTING_PORT=26666 \
-#   -v /root/qbittorrent/config:/config \
-#   -v /home/ahaopt/qbittorrent/Downloads:/home/ahaopt/qbittorrent/Downloads \
-#   --restart unless-stopped \
-#   lscr.io/linuxserver/qbittorrent:5.0.3
+docker run -d \
+  --name=qbittorrent \
+  --network host \
+  -e PUID=0 \
+  -e PGID=0 \
+  -e TZ=Asia/Shanghai \
+  -e WEBUI_PORT=6767 \
+  -e TORRENTING_PORT=26666 \
+  -v /root/qbittorrent/config:/config \
+  -v /home/ahaopt/qbittorrent/Downloads:/home/ahaopt/qbittorrent/Downloads \
+  --restart unless-stopped \
+  lscr.io/linuxserver/qbittorrent:5.0.4
 
-# if [ $? -eq 0 ]; then
-#     info_3 "qBittorrent Docker容器安装成功"
-#     boring_text "qBittorrent WebUI: http://$publicip:6767"
-# else
-#     fail_3 "qBittorrent Docker容器安装失败"
-# fi
-# seperator
+if [ $? -eq 0 ]; then
+    info_3 "qBittorrent Docker容器安装成功"
+    boring_text "qBittorrent WebUI: http://$publicip:6767"
+else
+    fail_3 "qBittorrent Docker容器安装失败"
+fi
+seperator
 
 # ==================== 功能 4：下载并解压qBittorrent配置文件包 ====================
-# info "开始下载qBittorrent配置文件包"
-# echo -e "正在停止qBittorrent容器..."
-# docker stop qbittorrent
+info "开始下载qBittorrent配置文件包"
+echo -e "正在停止qBittorrent容器..."
+docker stop qbittorrent
 
-# echo -e "正在下载并解压qBittorrent配置文件包到/root路径..."
-# curl -o /root/qbittorrent.tar.gz https://raw.githubusercontent.com/Smart-zsw/Seedbox/main/qbittorrent.tar.gz &&
-# tar -xzvf /root/qbittorrent.tar.gz -C /root/
+echo -e "正在下载并解压qBittorrent配置文件包到/root路径..."
+curl -o /root/qbittorrent.tar.gz https://raw.githubusercontent.com/Smart-zsw/Seedbox/main/qbittorrent.tar.gz &&
+tar -xzvf /root/qbittorrent.tar.gz -C /root/
 
-# if [ $? -eq 0 ]; then
-#     info_3 "qBittorrent配置文件包下载并解压成功"
-# else
-#     fail_3 "qBittorrent配置文件包下载并解压失败"
-# fi
-# seperator
+if [ $? -eq 0 ]; then
+    info_3 "qBittorrent配置文件包下载并解压成功"
+else
+    fail_3 "qBittorrent配置文件包下载并解压失败"
+fi
+seperator
 
-# echo -e "正在启动qBittorrent容器..."
-# docker start qbittorrent
+echo -e "正在启动qBittorrent容器..."
+docker start qbittorrent
 
 # ==================== 功能 5：运行Dedicated-Seedbox安装脚本 ====================
-# info "开始运行Dedicated-Seedbox安装脚本"
-# echo -e "正在下载并运行Dedicated-Seedbox安装脚本..."
-# bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Dedicated-Seedbox/main/Install.sh) -x
+info "开始运行Dedicated-Seedbox安装脚本"
+echo -e "正在下载并运行Dedicated-Seedbox安装脚本..."
+bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Dedicated-Seedbox/main/Install.sh) -x
 
-# if [ $? -eq 0 ]; then
-#     info_3 "Dedicated-Seedbox安装脚本运行成功"
-# else
-#     fail_3 "Dedicated-Seedbox安装脚本运行失败"
-# fi
-# seperator
+if [ $? -eq 0 ]; then
+    info_3 "Dedicated-Seedbox安装脚本运行成功"
+else
+    fail_3 "Dedicated-Seedbox安装脚本运行失败"
+fi
+seperator
 
 # ==================== 功能 6：安装Vertex Docker容器 ====================
 info "开始安装Docker版Vertex"
