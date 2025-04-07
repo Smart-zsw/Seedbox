@@ -119,7 +119,7 @@ docker start qbittorrent
 # ==================== 功能 5：运行Dedicated-Seedbox安装脚本 ====================
 info "开始运行Dedicated-Seedbox安装脚本"
 echo -e "正在下载并运行Dedicated-Seedbox安装脚本..."
-bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Dedicated-Seedbox/main/Install.sh) -x
+bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Dedicated-Seedbox/main/Install.sh) -b -r -x
 
 if [ $? -eq 0 ]; then
     info_3 "Dedicated-Seedbox安装脚本运行成功"
