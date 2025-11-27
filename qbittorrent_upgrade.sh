@@ -53,13 +53,6 @@ if systemctl is-active --quiet "$QB_SERVICE"; then
 fi
 echo "服务已停止"
 
-# 备份原文件(可选)
-if [ -f /usr/bin/qbittorrent-nox ]; then
-    echo "正在备份原文件..."
-    cp /usr/bin/qbittorrent-nox /usr/bin/qbittorrent-nox.backup.$(date +%Y%m%d_%H%M%S)
-    echo "备份完成"
-fi
-
 # 下载新版本并替换原文件
 echo "正在从以下链接下载新版本qBittorrent..."
 echo "$DOWNLOAD_URL"
@@ -78,16 +71,5 @@ fi
 # 启动qBittorrent服务
 echo "正在启动qBittorrent服务..."
 systemctl start "$QB_SERVICE"
-sleep 2
-
-# 检查服务是否成功启动
-if systemctl is-active --quiet "$QB_SERVICE"; then
-    echo "服务已成功启动"
-    systemctl status "$QB_SERVICE" --no-pager -l
-else
-    echo "错误:服务启动失败,请检查日志"
-    echo "查看日志命令: journalctl -u $QB_SERVICE -n 50"
-    exit 1
-fi
 
 echo "qBittorrent升级完成!"
